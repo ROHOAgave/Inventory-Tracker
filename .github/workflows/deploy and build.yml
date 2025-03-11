@@ -18,8 +18,53 @@ jobs:
       
       - name: Install dependencies
         run: npm install --no-package-lock
-      
-      - name: Create full ProductionEstimator component
+
+      - name: Create HTML and JS files
+        run: |
+          echo '<!DOCTYPE html>
+          <html lang="en">
+            <head>
+              <meta charset="utf-8" />
+              <meta name="viewport" content="width=device-width, initial-scale=1" />
+              <title>Batch Availability</title>
+            </head>
+            <body>
+              <div id="root"></div>
+            </body>
+          </html>' > public/index.html
+          
+          echo 'import React from "react";
+          import ReactDOM from "react-dom/client";
+          import "./index.css";
+          import App from "./App";
+          
+          const root = ReactDOM.createRoot(document.getElementById("root"));
+          root.render(
+            <React.StrictMode>
+              <App />
+            </React.StrictMode>
+          );' > src/index.js
+          
+          echo 'import React from "react";
+          import InventoryTracker from "./components/InventoryTracker";
+          
+          function App() {
+            return (
+              <div className="App">
+                <header className="bg-gray-800 text-white p-4">
+                  <h1 className="text-3xl font-bold">Batch Availability</h1>
+                  <p className="mt-2">Track batch availability</p>
+                </header>
+                <main className="container mx-auto py-6 px-4">
+                  <InventoryTracker />
+                </main>
+              </div>
+            );
+          }
+          
+          export default App;' > src/App.js
+          
+      - name: Create full InventoryTracker component
         run: |
           cat > src/components/InventoryTracker.js << 'EOL'
           import React from 'react';
