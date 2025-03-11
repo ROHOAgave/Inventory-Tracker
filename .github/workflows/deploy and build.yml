@@ -9,18 +9,18 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-and-deploy:
-    runs-on: ubuntu-latest
+build-and-deploy:
+runs-on: ubuntu-latest
     
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-      
-      - name: Install dependencies
-        run: npm install --no-package-lock
+steps:
+  - name: Checkout code
+    uses: actions/checkout@v3
 
-      - name: Create HTML and JS files
-        run: |
+  - name: Install dependencies
+    run: npm install --no-package-lock
+
+  - name: Create HTML and JS files
+    run: |
           echo '<!DOCTYPE html>
           <html lang="en">
             <head>
@@ -64,124 +64,218 @@ jobs:
           
           export default App;' > src/App.js
           
-      - name: Create full InventoryTracker component
-        run: |
-          cat > src/components/InventoryTracker.js << 'EOL'
-          import React from 'react';
-          import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
-          const BatchInventoryChart = () => {
-          // Inventory data - this is what you'll update in GitHub
-          const inventoryData = [
-          {
-          batch: 'Batch 17',
-          remaining: 25,
-          total: 75
-          },
-          {
-          batch: 'Batch 18',
-          remaining: 75,
-          total: 75
-          },
-          {
-          batch: 'Batch 19',
-          remaining: 80,
-          total: 80
-          },
-          {
-          batch: 'Batch 20',
-          remaining: 100,
-          total: 100
-          }
-          ];
-          // Process data to add percentage information
-          const processedData = inventoryData.map(item => {
-          // Calculate sold number
-          const soldCount = item.total - item.remaining;    
-          // Calculate percentages
-          const remainingPercentage = Math.round((item.remaining / item.total) * 100);
-          const soldPercentage = 100 - remainingPercentage;
-          return {
-          ...item,
-          sold: soldCount,
-          remainingPercentage,
-          soldPercentage
-          };
-          });
+  - name: Create full InventoryTracker component
+    run: |
+      cat > src/components/InventoryTracker.js << 'EOL'
+      import React, { useRef, useEffect, useState } from 'react';
+      import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer } from 'recharts';
 
-          // Custom tooltip to show more detailed information
-          const CustomTooltip = ({ active, payload, label }) => {
-          if (active && payload && payload.length) {
-          const data = payload[0].payload;
-          return (
-          <div className="bg-white p-3 border rounded shadow-md" style={{ fontFamily: "'Avenir', 'Avenir Next', 'Futura', sans-serif" 
-          }}>
-          <p className="font-bold">{label}</p>
-          <p className="text-sm">Remaining: {data.remaining} of {data.total} ({data.remainingPercentage}%)</p>
-          <p className="text-sm">Sold: {data.sold} of {data.total} ({data.soldPercentage}%)</p>
-          </div>
-          );
-          }
-          return null;
-          };
+      const BatchInventoryChart = () => {
+      // Inventory data - this is what you'll update in GitHub
+      const inventoryData = [
+      {
+      batch: 'Batch 17',
+      remaining: 25,
+      total: 75
+      },
+      {
+      batch: 'Batch 18',
+      remaining: 75,
+      total: 75
+      },
+      {
+      batch: 'Batch 19',
+      remaining: 80,
+      total: 80
+      },
+      {
+      batch: 'Batch 20',
+      remaining: 100,
+      total: 100
+      }
+      ];
 
-          // Simple label component for remaining bottles
-          const RemainingLabel = (props) => {
-          const { x, y, width, height, value } = props;
-          if (width < 30) return null;
+      // Process data to add percentage information
+      const processedData = inventoryData.map(item => {
+      // Calculate sold number
+      const soldCount = item.total - item.remaining;    
+      // Calculate percentages
+      const remainingPercentage = Math.round((item.remaining / item.total) * 100);
+      const soldPercentage = 100 - remainingPercentage;    
+      return {
+      ...item,
+      sold: soldCount,
+      remainingPercentage,
+      soldPercentage
+      };
+      });
 
-          // Find the data item for this bar segment
-          const index = props.index;
-          if (index === undefined || !processedData[index]) return null;
+      // State to track the x position of the first segment for each bar
+      const [firstSegmentPositions, setFirstSegmentPositions] = useState({});
 
-          const count = processedData[index].remaining;
+      // Simple label component for remaining bottles
+      const RemainingLabel = (props) => {
+      const { x, y, width, height, value, index } = props;
+      if (width < 30) return null;
 
-          return (
-          <text 
-          x={x + 10} 
-          y={y + height / 2} 
-          textAnchor="start" 
-          dominantBaseline="middle"
-          fill="#FFFFFF"
-          fontWeight="bold"
-          >
-          {count}
-          </text>
-          );
-          };
+      // Find the data item for this bar segment
+      if (index === undefined || !processedData[index]) return null;
 
-          // Simple label component for sold bottles
-          const SoldLabel = (props) => {
-          const { x, y, width, height, value } = props;
-          if (width < 30) return null;
+      const count = processedData[index].remaining;   
+      // Store first segment position for this index
+      if (firstSegmentPositions[index] !== x) {
+      // Create a copy of the current positions and update it
+      const updatedPositions = {...firstSegmentPositions, [index]: x};
+      // Use setTimeout to avoid state updates during render
+      setTimeout(() => setFirstSegmentPositions(updatedPositions), 0);
+      }
+
+      return (
+      <text 
+        x={x + 10} 
+        y={y + height / 2} 
+        textAnchor="start" 
+        dominantBaseline="middle"
+        fill="#FFFFFF"
+        fontWeight="bold"
+      >
+        {count}
+      </text>
+      );
+      };
+
+      // Simple label component for sold bottles
+      const SoldLabel = (props) => {
+      const { x, y, width, height, value, index } = props;
+      if (width < 30) return null; 
+      // Find the data item for this bar segment
+      if (index === undefined || !processedData[index]) return null;  
+      const count = processedData[index].sold;
+
+      return (
+      <text 
+        x={x + 10} 
+        y={y + height / 2} 
+        textAnchor="start" 
+        dominantBaseline="middle"
+        fill="#FFFFFF"
+        fontWeight="bold"
+      >
+        {count}
+      </text>
+      );
+      };
+
+      // Container ref to get dimensions
+      const containerRef = useRef(null);
+      const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+
+      // Update dimensions on component mount
+      useEffect(() => {
+      if (containerRef.current) {
+      const { width, height } = containerRef.current.getBoundingClientRect();
+      setDimensions({ width, height });
+      }
+      }, []);
+
+      // Update dimensions on window resize
+      useEffect(() => {
+      const handleResize = () => {
+      if (containerRef.current) {
+        const { width, height } = containerRef.current.getBoundingClientRect();
+        setDimensions({ width, height });
+      }
+      };
+
+      window.addEventListener('resize', handleResize);
+      return () => window.removeEventListener('resize', handleResize);
+      }, []);
+      // Get chart details to align the border perfectly
+      const chartRef = useRef(null);
+
+      // Customized Rectangle component that creates a rounded rectangle with exact positioning
+      const RoundedBar = (props) => {
+      const { x, y, width, height, fill, index } = props;
+
+      // Radius for rounded corners
+      const radius = 8;
+
+      // For first segment ("remainingPercentage")
+      if (props.dataKey === "remainingPercentage") {
+      // Store first segment position for this index
+      if (firstSegmentPositions[index] !== x) {
+        const updatedPositions = {...firstSegmentPositions, [index]: x};
+        setTimeout(() => setFirstSegmentPositions(updatedPositions), 0);
+      }
+      
+      return (
+        <g>
+          {/* Create a custom path that only rounds the left corners */}
+          <path
+            d={`
+              M ${x + radius},${y}
+              H ${x + width}
+              V ${y + height}
+              H ${x + radius}
+              Q ${x},${y + height} ${x},${y + height - radius}
+              V ${y + radius}
+              Q ${x},${y} ${x + radius},${y}
+            `}
+            fill={fill}
+          />
+        </g>
+      );
+      }
+
+      // For second segment ("soldPercentage")
+      if (props.dataKey === "soldPercentage") {
+      // Get the starting position of the first segment for this bar
+      const firstSegmentX = firstSegmentPositions[index] || x; // Fallback to x if not stored yet
+      const totalWidth = (x - firstSegmentX) + width;
+      
+      return (
+        <g>
+          {/* Create a custom path that only rounds the right corners */}
+          <path
+            d={`
+              M ${x},${y}
+              H ${x + width - radius}
+              Q ${x + width},${y} ${x + width},${y + radius}
+              V ${y + height - radius}
+              Q ${x + width},${y + height} ${x + width - radius},${y + height}
+              H ${x}
+              V ${y}
+            `}
+            fill={fill}
+          />
           
-          // Find the data item for this bar segment
-          const index = props.index;
-          if (index === undefined || !processedData[index]) return null;
-          
-          const count = processedData[index].sold;
-          
-          return (
-          <text 
-          x={x + 10} 
-          y={y + height / 2} 
-          textAnchor="start" 
-          dominantBaseline="middle"
-          fill="#FFFFFF"
-          fontWeight="bold"
-          >
-          {count}
-          </text>
-          );
-          };
+          {/* Draw outer border around both segments */}
+          <rect
+            x={firstSegmentX}
+            y={y}
+            width={totalWidth}
+            height={height}
+            fill="none"
+            stroke="#666"
+            strokeWidth={2}
+            rx={radius}
+            ry={radius}
+          />
+        </g>
+      );
+      }
 
-          return (
-          <div className="w-full p-4" style={{ 
-           backgroundColor: '#D5D2CD',
-          fontFamily: "'Avenir', 'Avenir Next', 'Futura', sans-serif"
-          }}>
-          <h2 className="text-2xl font-bold mb-4" style={{ fontFamily: "'Avenir', 'Avenir Next', 'Futura', sans-serif" }}>Batch Availability</h2>
-          <div className="flex justify-center">
-          <div className="flex gap-4 mb-4">
+      return null;
+      };
+
+      return (
+      <div className="w-full p-4" style={{ 
+      backgroundColor: '#D5D2CD',
+      fontFamily: "'Avenir', 'Avenir Next', 'Futura', sans-serif"
+      }}>
+      <h2 className="text-2xl font-bold mb-4" style={{ fontFamily: "'Avenir', 'Avenir Next', 'Futura', sans-serif" }}>Batch Availability</h2>
+      <div className="flex justify-center">
+        <div className="flex flex-col items-center gap-2 mb-4">
           <div className="flex items-center">
             <div className="w-4 h-4 mr-2 rounded" style={{ backgroundColor: '#9C8B7E' }}></div>
             <span>Available</span>
@@ -190,16 +284,20 @@ jobs:
             <div className="w-4 h-4 mr-2 rounded" style={{ backgroundColor: '#C2A998' }}></div>
             <span>Sold</span>
           </div>
-          </div>
-          </div>
-          <div style={{ height: "400px" }}>
-          <ResponsiveContainer width="100%" height="100%">
+        </div>
+      </div>
+      <div ref={containerRef} style={{ height: "400px" }}>
+        <ResponsiveContainer width="100%" height="100%">
           <BarChart
+            ref={chartRef}
             data={processedData}
             layout="vertical"
             margin={{ top: 20, right: 30, left: 60, bottom: 5 }}
+            barSize={40}
+            barGap={0}
+            barCategoryGap={20}
           >
-            <XAxis type="number" domain={[0, 100]} hide={true} />
+            <XAxis type="number" domain={[0, 100]} hide={true} padding={{ left: 0, right: 0 }} />
             <YAxis 
               dataKey="batch" 
               type="category" 
@@ -207,31 +305,32 @@ jobs:
               axisLine={false}
               tickLine={false}
             />
-            <Tooltip content={<CustomTooltip />} />
+            {/* Remaining Bar with rounded left corners */}
             <Bar 
               dataKey="remainingPercentage" 
               stackId="a" 
               fill="#9C8B7E" 
               name="Available"
-              radius={[0, 0, 0, 0]}
+              shape={<RoundedBar />}
               label={<RemainingLabel />}
             />
+            {/* Sold Bar with rounded right corners */}
             <Bar 
               dataKey="soldPercentage" 
               stackId="a" 
               fill="#C2A998" 
-              name="Sold" 
-              radius={[0, 0, 0, 0]}
+              name="Sold"
+              shape={<RoundedBar />}
               label={<SoldLabel />}
             />
           </BarChart>
-          </ResponsiveContainer>
-          </div>
-          </div>
-          );
-          };
+        </ResponsiveContainer>
+      </div>
+      </div>
+      );
+      };
 
-          export default BatchInventoryChart;
+      export default BatchInventoryChart;
           EOL
           
       - name: Setup Node.js
