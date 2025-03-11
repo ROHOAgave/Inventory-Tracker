@@ -1,5 +1,5 @@
 import React from 'react';
-import ProductionEstimator from './components/ProductionEstimator';
+import InventoryTracker from './components/InventoryTracker';
 
 function App() {
   return (
