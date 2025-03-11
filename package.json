@@ -1,7 +1,7 @@
 {
   "name": "process-data-model",
   "version": "0.1.0",
-  "homepage": "https://ROHOAgave.github.io/Process-Data-Model",
+  "homepage": "https://ROHOAgave.github.io/Inventory-Tracker",
   "private": true,
   "dependencies": {
     "react": "^18.2.0",
