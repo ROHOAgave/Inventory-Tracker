@@ -1,0 +1,13 @@
+{
+  "files": {
+    "main.css": "/Inventory-Tracker/static/css/main.e6c13ad2.css",
+    "main.js": "/Inventory-Tracker/static/js/main.8472fa83.js",
+    "index.html": "/Inventory-Tracker/index.html",
+    "main.e6c13ad2.css.map": "/Inventory-Tracker/static/css/main.e6c13ad2.css.map",
+    "main.8472fa83.js.map": "/Inventory-Tracker/static/js/main.8472fa83.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.e6c13ad2.css",
+    "static/js/main.8472fa83.js"
+  ]
+}
