@@ -30,7 +30,7 @@ jobs:
       run: |
         cat > package.json << 'EOL'
         {
-          "name": "batch-inventory-chart",
+          "name": "inventory-tracker",
           "version": "0.1.0",
           "private": true,
           "dependencies": {
@@ -72,7 +72,7 @@ jobs:
             <head>
               <meta charset="utf-8" />
               <meta name="viewport" content="width=device-width, initial-scale=1" />
-              <title>Batch Availability</title>
+              <title></title>
             </head>
             <body>
               <div id="root"></div>
@@ -91,12 +91,12 @@ jobs:
           );' > src/index.js
           
           echo 'import React from "react";
-          import BatchInventoryChart from "./components/BatchInventoryChart";
+          import InventoryTracker from "./components/InventoryTracker";
           
           function App() {
             return (
               <div className="App">
-                <BatchInventoryChart />
+                <InventoryTracker />
               </div>
             );
           }
@@ -118,13 +118,13 @@ jobs:
         }
         EOL
           
-    - name: Create BatchInventoryChart component
+    - name: Create InventoryTracker component
       run: |
-        cat > src/components/BatchInventoryChart.js << 'EOL'
+        cat > src/components/InventoryTracker.js << 'EOL'
         import React, { useRef, useEffect, useState } from 'react';
         import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer } from 'recharts';
 
-        const BatchInventoryChart = () => {
+        const InventoryTracker = () => {
           // Inventory data - this is what you'll update in GitHub
           const inventoryData = [
             {
