@@ -5,7 +5,6 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
-  # Allow manual trigger from GitHub UI
   workflow_dispatch:
  
 jobs:
@@ -26,13 +25,14 @@ jobs:
         mkdir -p public
         mkdir -p src/components
 
-    - name: Create package.json
+    - name: Create package.json with homepage
       run: |
         cat > package.json << 'EOL'
         {
           "name": "batch-inventory-chart",
           "version": "0.1.0",
           "private": true,
+          "homepage": ".",
           "dependencies": {
             "react": "^18.2.0",
             "react-dom": "^18.2.0",
@@ -48,7 +48,10 @@ jobs:
           "eslintConfig": {
             "extends": [
               "react-app"
-            ]
+            ],
+            "rules": {
+              "no-unused-vars": "warn"
+            }
           },
           "browserslist": {
             "production": [
@@ -65,128 +68,146 @@ jobs:
         }
         EOL
 
-    - name: Create HTML and JS files
+    - name: Create HTML with debugging
       run: |
-          echo '<!DOCTYPE html>
+          cat > public/index.html << 'EOL'
+          <!DOCTYPE html>
           <html lang="en">
             <head>
               <meta charset="utf-8" />
               <meta name="viewport" content="width=device-width, initial-scale=1" />
               <title>Batch Availability</title>
+              <style>
+                body { margin: 0; padding: 0; }
+                .error-display {
+                  background: #fee;
+                  color: #c00;
+                  padding: 10px;
+                  margin: 10px;
+                  border: 1px solid #f00;
+                  border-radius: 4px;
+                }
+              </style>
             </head>
             <body>
               <div id="root"></div>
+              <script>
+                // Error handling for React
+                window.addEventListener('error', function(e) {
+                  const errorDiv = document.createElement('div');
+                  errorDiv.className = 'error-display';
+                  errorDiv.innerHTML = '<strong>Error:</strong> ' + e.message;
+                  document.body.appendChild(errorDiv);
+                });
+              </script>
             </body>
-          </html>' > public/index.html
+          </html>
+          EOL
           
-          echo 'import React from "react";
+    - name: Create simpler React files
+      run: |
+          cat > src/index.js << 'EOL'
+          import React from "react";
           import ReactDOM from "react-dom/client";
           import "./index.css";
-          import App from "./App";
+          import InventoryTracker from "./components/InventoryTracker";
+
+          // Simple app wrapper
+          const App = () => {
+            return <InventoryTracker />;
+          };
+          
+          // Error boundary to catch rendering errors
+          class ErrorBoundary extends React.Component {
+            constructor(props) {
+              super(props);
+              this.state = { hasError: false, error: null };
+            }
+            
+            static getDerivedStateFromError(error) {
+              return { hasError: true, error };
+            }
+            
+            render() {
+              if (this.state.hasError) {
+                return (
+                  <div style={{ padding: '20px', color: 'red', background: '#fee', border: '1px solid red', margin: '20px' }}>
+                    <h2>Something went wrong.</h2>
+                    <p>{this.state.error?.toString()}</p>
+                  </div>
+                );
+              }
+              
+              return this.props.children;
+            }
+          }
           
           const root = ReactDOM.createRoot(document.getElementById("root"));
           root.render(
-            <React.StrictMode>
+            <ErrorBoundary>
               <App />
-            </React.StrictMode>
-          );' > src/index.js
+            </ErrorBoundary>
+          );
+          EOL
           
-          echo 'import React from "react";
-          import InventoryTracker from "./components/InventoryTracker";
+          cat > src/index.css << 'EOL'
+          @import url('https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css');
           
-          function App() {
-            return (
-              <div className="App">
-                <InventoryTracker />
-              </div>
-            );
+          body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+              'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+              sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
           }
+          EOL
           
-          export default App;' > src/App.js
-
-    - name: Create CSS for Tailwind classes
-      run: |
-        cat > src/index.css << 'EOL'
-        @import url('https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css');
-        
-        body {
-          margin: 0;
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-            'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-            sans-serif;
-          -webkit-font-smoothing: antialiased;
-          -moz-osx-font-smoothing: grayscale;
-        }
-        EOL
-          
-    - name: Create InventoryTracker component
+    - name: Create simplified InventoryTracker component
       run: |
         cat > src/components/InventoryTracker.js << 'EOL'
-        import React, { useRef, useEffect, useState } from 'react';
+        import React, { useRef, useState } from 'react';
         import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer } from 'recharts';
 
         const InventoryTracker = () => {
-          // Inventory data - this is what you'll update in GitHub
+          // Simplified data structure
           const inventoryData = [
-            {
-              batch: 'Batch 17',
-              remaining: 25,
-              total: 75
-            },
-            {
-              batch: 'Batch 18',
-              remaining: 75,
-              total: 75
-            },
-            {
-              batch: 'Batch 19',
-              remaining: 80,
-              total: 80
-            },
-            {
-              batch: 'Batch 20',
-              remaining: 100,
-              total: 100
-            }
+            { batch: 'Batch 17', remaining: 25, total: 75 },
+            { batch: 'Batch 18', remaining: 75, total: 75 },
+            { batch: 'Batch 19', remaining: 80, total: 80 },
+            { batch: 'Batch 20', remaining: 100, total: 100 }
           ];
           
-          // Process data to add percentage information
+          // Process data in one pass
           const processedData = inventoryData.map(item => {
-            // Calculate sold number
             const soldCount = item.total - item.remaining;
-            
-            // Calculate percentages
             const remainingPercentage = Math.round((item.remaining / item.total) * 100);
-            const soldPercentage = 100 - remainingPercentage;
-            
             return {
               ...item,
               sold: soldCount,
               remainingPercentage,
-              soldPercentage
+              soldPercentage: 100 - remainingPercentage
             };
           });
 
-          // State to track the x position of the first segment for each bar
+          // First segment positions stored with useState
           const [firstSegmentPositions, setFirstSegmentPositions] = useState({});
+          
+          // Chart ref
+          const chartRef = useRef(null);
 
-          // Simple label component for remaining bottles
+          // Label component for remaining
           const RemainingLabel = (props) => {
             const { x, y, width, height, index } = props;
             if (width < 30) return null;
-            
-            // Find the data item for this bar segment
             if (index === undefined || !processedData[index]) return null;
             
-            const count = processedData[index].remaining;
-            
-            // Store first segment position for this index
-            if (firstSegmentPositions[index] !== x) {
-              // Create a copy of the current positions and update it
-              const updatedPositions = {...firstSegmentPositions, [index]: x};
-              // Use setTimeout to avoid state updates during render
-              setTimeout(() => setFirstSegmentPositions(updatedPositions), 0);
-            }
+            // Store position in ref callback instead of during render
+            React.useEffect(() => {
+              if (firstSegmentPositions[index] !== x) {
+                setFirstSegmentPositions(prev => ({...prev, [index]: x}));
+              }
+            }, [x, index]);
             
             return (
               <text 
@@ -197,20 +218,16 @@ jobs:
                 fill="#FFFFFF"
                 fontWeight="bold"
               >
-                {count}
+                {processedData[index].remaining}
               </text>
             );
           };
 
-          // Simple label component for sold bottles
+          // Label component for sold
           const SoldLabel = (props) => {
             const { x, y, width, height, index } = props;
             if (width < 30) return null;
-            
-            // Find the data item for this bar segment
             if (index === undefined || !processedData[index]) return null;
-            
-            const count = processedData[index].sold;
             
             return (
               <text 
@@ -221,62 +238,20 @@ jobs:
                 fill="#FFFFFF"
                 fontWeight="bold"
               >
-                {count}
+                {processedData[index].sold}
               </text>
             );
           };
-
-          // Container ref to get dimensions
-          const containerRef = useRef(null);
-          const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
-
-          // Update dimensions on component mount
-          useEffect(() => {
-            if (containerRef.current) {
-              const { width, height } = containerRef.current.getBoundingClientRect();
-              setDimensions({ width, height });
-            }
-          }, []);
-
-          // Update dimensions on window resize
-          useEffect(() => {
-            const handleResize = () => {
-              if (containerRef.current) {
-                const { width, height } = containerRef.current.getBoundingClientRect();
-                setDimensions({ width, height });
-              }
-            };
-
-            window.addEventListener('resize', handleResize);
-            return () => window.removeEventListener('resize', handleResize);
-          }, []);
-
-          // Use dimensions to optimize for small screens
-          useEffect(() => {
-            console.log("Container dimensions:", dimensions);
-          }, [dimensions]);
-
-          // Get chart details to align the border perfectly
-          const chartRef = useRef(null);
           
-          // Customized Rectangle component that creates a rounded rectangle with exact positioning
+          // Custom bar shape
           const RoundedBar = (props) => {
             const { x, y, width, height, fill, index } = props;
-            
-            // Radius for rounded corners
             const radius = 8;
             
             // For first segment ("remainingPercentage")
             if (props.dataKey === "remainingPercentage") {
-              // Store first segment position for this index
-              if (firstSegmentPositions[index] !== x) {
-                const updatedPositions = {...firstSegmentPositions, [index]: x};
-                setTimeout(() => setFirstSegmentPositions(updatedPositions), 0);
-              }
-              
               return (
                 <g>
-                  {/* Create a custom path that only rounds the left corners */}
                   <path
                     d={`
                       M ${x + radius},${y}
@@ -295,13 +270,11 @@ jobs:
             
             // For second segment ("soldPercentage")
             if (props.dataKey === "soldPercentage") {
-              // Get the starting position of the first segment for this bar
-              const firstSegmentX = firstSegmentPositions[index] || x; // Fallback to x if not stored yet
+              const firstSegmentX = firstSegmentPositions[index] || x;
               const totalWidth = (x - firstSegmentX) + width;
               
               return (
                 <g>
-                  {/* Create a custom path that only rounds the right corners */}
                   <path
                     d={`
                       M ${x},${y}
@@ -315,7 +288,6 @@ jobs:
                     fill={fill}
                   />
                   
-                  {/* Draw outer border around both segments */}
                   <rect
                     x={firstSegmentX}
                     y={y}
@@ -335,13 +307,11 @@ jobs:
           };
 
           return (
-            <div className="w-full p-4" style={{ 
-              backgroundColor: '#D5D2CD',
-              fontFamily: "'Avenir', 'Avenir Next', 'Futura', sans-serif"
-            }}>
-              <h2 className="text-2xl font-bold mb-4" style={{ fontFamily: "'Avenir', 'Avenir Next', 'Futura', sans-serif" }}>Batch Availability</h2>
-              <div className="flex justify-center">
-                <div className="flex flex-col items-center gap-2 mb-4">
+            <div className="w-full p-4" style={{ backgroundColor: '#D5D2CD', fontFamily: "'Avenir', 'Avenir Next', 'Futura', sans-serif" }}>
+              <h2 className="text-2xl font-bold mb-4">Batch Availability</h2>
+              
+              <div className="flex justify-center mb-4">
+                <div className="flex flex-col items-center gap-2">
                   <div className="flex items-center">
                     <div className="w-4 h-4 mr-2 rounded" style={{ backgroundColor: '#9C8B7E' }}></div>
                     <span>Available</span>
@@ -352,31 +322,20 @@ jobs:
                   </div>
                 </div>
               </div>
-              <div ref={containerRef} style={{ height: "400px" }}>
+              
+              <div style={{ height: "400px" }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart
                     ref={chartRef}
                     data={processedData}
                     layout="vertical"
-                    margin={{ 
-                      top: 20, 
-                      right: 30, 
-                      left: dimensions.width < 500 ? 40 : 60,
-                      bottom: 5 
-                    }}
+                    margin={{ top: 20, right: 30, left: 60, bottom: 5 }}
                     barSize={40}
                     barGap={0}
                     barCategoryGap={20}
                   >
-                    <XAxis type="number" domain={[0, 100]} hide={true} padding={{ left: 0, right: 0 }} />
-                    <YAxis 
-                      dataKey="batch" 
-                      type="category" 
-                      width={80} 
-                      axisLine={false}
-                      tickLine={false}
-                    />
-                    {/* Remaining Bar with rounded left corners */}
+                    <XAxis type="number" domain={[0, 100]} hide={true} />
+                    <YAxis dataKey="batch" type="category" width={80} axisLine={false} tickLine={false} />
                     <Bar 
                       dataKey="remainingPercentage" 
                       stackId="a" 
@@ -385,7 +344,6 @@ jobs:
                       shape={<RoundedBar />}
                       label={<RemainingLabel />}
                     />
-                    {/* Sold Bar with rounded right corners */}
                     <Bar 
                       dataKey="soldPercentage" 
                       stackId="a" 
@@ -410,9 +368,16 @@ jobs:
     - name: Build project
       run: npm run build
       
+    - name: Debug build output
+      run: |
+        echo "Build directory contents:"
+        ls -la build/
+        echo "JavaScript files:"
+        find build -name "*.js" | xargs ls -la
+      
     - name: Deploy to GitHub Pages
       uses: JamesIves/github-pages-deploy-action@v4
       with:
-          branch: gh-pages # The branch the action should deploy to
-          folder: build    # The folder the action should deploy
-          clean: true      # Automatically remove deleted files from the deployment branch
+          branch: gh-pages
+          folder: build
+          clean: true
