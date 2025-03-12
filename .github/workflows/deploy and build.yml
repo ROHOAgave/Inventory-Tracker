@@ -166,7 +166,7 @@ jobs:
     - name: Create simplified InventoryTracker component
       run: |
         cat > src/components/InventoryTracker.js << 'EOL'
-        import React, { useRef, useState } from 'react';
+        import React, { useRef, useState, useEffect } from 'react';
         import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer } from 'recharts';
 
         const InventoryTracker = () => {
@@ -196,18 +196,29 @@ jobs:
           // Chart ref
           const chartRef = useRef(null);
 
+          // Store segment position - separate function to avoid hooks issues
+          const storeSegmentPosition = (index, x) => {
+            if (firstSegmentPositions[index] !== x) {
+              setFirstSegmentPositions(prev => ({...prev, [index]: x}));
+            }
+          };
+
           // Label component for remaining
           const RemainingLabel = (props) => {
             const { x, y, width, height, index } = props;
-            if (width < 30) return null;
-            if (index === undefined || !processedData[index]) return null;
             
-            // Store position in ref callback instead of during render
-            React.useEffect(() => {
-              if (firstSegmentPositions[index] !== x) {
-                setFirstSegmentPositions(prev => ({...prev, [index]: x}));
+            // Use regular useEffect instead of React.useEffect
+            // and place it at the top level, not after conditions
+            useEffect(() => {
+              // Only store position if the index and x are valid
+              if (index !== undefined && x !== undefined) {
+                storeSegmentPosition(index, x);
               }
             }, [x, index]);
+            
+            // Early returns are fine after the hook
+            if (width < 30) return null;
+            if (index === undefined || !processedData[index]) return null;
             
             return (
               <text 
@@ -250,6 +261,11 @@ jobs:
             
             // For first segment ("remainingPercentage")
             if (props.dataKey === "remainingPercentage") {
+              // Store position in parent component's function
+              if (index !== undefined && x !== undefined) {
+                storeSegmentPosition(index, x);
+              }
+              
               return (
                 <g>
                   <path
