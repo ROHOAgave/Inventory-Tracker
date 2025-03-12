@@ -390,7 +390,7 @@ jobs:
           );
         };
 
-        export default BatchInventoryChart;
+        export default InventoryTracker;
         EOL
           
     - name: Install dependencies
