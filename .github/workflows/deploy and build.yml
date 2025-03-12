@@ -352,7 +352,12 @@ jobs:
                     ref={chartRef}
                     data={processedData}
                     layout="vertical"
-                    margin={{ top: 20, right: 30, left: 60, bottom: 5 }}
+                    margin={{ 
+                    top: 20, 
+                    right: 30, 
+                    left: dimensions.width < 500 ? 40 : 60,  // Smaller left margin on small screens
+                    bottom: 5 
+                    }}
                     barSize={40}
                     barGap={0}
                     barCategoryGap={20}
