@@ -30,7 +30,7 @@ jobs:
       run: |
         cat > package.json << 'EOL'
         {
-          "name": "inventory-tracker",
+          "name": "batch-inventory-chart",
           "version": "0.1.0",
           "private": true,
           "dependencies": {
@@ -72,7 +72,7 @@ jobs:
             <head>
               <meta charset="utf-8" />
               <meta name="viewport" content="width=device-width, initial-scale=1" />
-              <title></title>
+              <title>Batch Availability</title>
             </head>
             <body>
               <div id="root"></div>
@@ -81,6 +81,7 @@ jobs:
           
           echo 'import React from "react";
           import ReactDOM from "react-dom/client";
+          import "./index.css";
           import App from "./App";
           
           const root = ReactDOM.createRoot(document.getElementById("root"));
@@ -250,6 +251,11 @@ jobs:
             return () => window.removeEventListener('resize', handleResize);
           }, []);
 
+          // Use dimensions to optimize for small screens
+          useEffect(() => {
+            console.log("Container dimensions:", dimensions);
+          }, [dimensions]);
+
           // Get chart details to align the border perfectly
           const chartRef = useRef(null);
           
@@ -353,10 +359,10 @@ jobs:
                     data={processedData}
                     layout="vertical"
                     margin={{ 
-                    top: 20, 
-                    right: 30, 
-                    left: dimensions.width < 500 ? 40 : 60,  // Smaller left margin on small screens
-                    bottom: 5 
+                      top: 20, 
+                      right: 30, 
+                      left: dimensions.width < 500 ? 40 : 60,
+                      bottom: 5 
                     }}
                     barSize={40}
                     barGap={0}
