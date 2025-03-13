@@ -339,19 +339,20 @@ jobs:
                     barCategoryGap={20}
                   >
                     <XAxis type="number" domain={[0, 100]} hide={true} />
-                    <YAxis dataKey="batch" type="category" width={80} axisLine={false} tickLine={false} />
+                    <YAxis dataKey="batch" type="category" width={80} axisLine={false} tick={{ fontWeight: 'bold' }} tickLine={false} />
                     <Legend 
                       align="center"
                       verticalAlign="bottom"
                       wrapperStyle={{ 
                         paddingTop: '20px',
                         paddingBottom: '10px'
+                        fontFamily: "'Avenir', 'Avenir Next', 'Futura', sans-serif"
                       }}
                       layout="horizontal"
                       iconType="circle"
                       iconSize={14} 
                       formatter={(value) => (    // Custom text styling
-                        <span style={{ color: '#666', fontSize: '20px', fontWeight: 'bold' }}>{value}</span>
+                        <span style={{ color: '#666', fontSize: '20px', fontWeight: 'bold', fontFamily: "'Avenir', 'Avenir Next', 'Futura', sans-serif"}}>{value}</span>
                       )}
                     />
                     <Bar 
