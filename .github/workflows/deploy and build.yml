@@ -173,9 +173,9 @@ jobs:
           // Simplified data structure
           const inventoryData = [
             { batch: 'Batch 17', remaining: 25, total: 75 },
-            { batch: 'Batch 18', remaining: 75, total: 75 },
-            { batch: 'Batch 19', remaining: 80, total: 80 },
-            { batch: 'Batch 20', remaining: 100, total: 100 }
+            // { batch: 'Batch 18', remaining: 75, total: 75 },
+           // { batch: 'Batch 19', remaining: 80, total: 80 },
+           // { batch: 'Batch 20', remaining: 100, total: 100 }
           ];
           
           // Process data in one pass
@@ -257,7 +257,7 @@ jobs:
           // Custom bar shape
           const RoundedBar = (props) => {
             const { x, y, width, height, fill, index } = props;
-            const radius = 8;
+            const radius = 10;
             
             // For first segment ("remainingPercentage")
             if (props.dataKey === "remainingPercentage") {
