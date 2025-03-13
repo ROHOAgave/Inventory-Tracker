@@ -339,7 +339,7 @@ jobs:
                     barCategoryGap={20}
                   >
                     <XAxis type="number" domain={[0, 100]} hide={true} />
-                    <YAxis dataKey="batch" type="category" width={80} axisLine={false} tickLine={false} tick={{ fontWeight: 'bold', fontSize: '14px' }} />
+                    <YAxis dataKey="batch" type="category" width={80} axisLine={false} tickLine={false} tick={{ fontWeight: 'bold', fontSize: '18px' }} />
                     <Legend 
                       align="center"
                       verticalAlign="bottom"
