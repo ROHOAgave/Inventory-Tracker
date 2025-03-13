@@ -167,7 +167,7 @@ jobs:
       run: |
         cat > src/components/InventoryTracker.js << 'EOL'
         import React, { useRef, useState, useEffect } from 'react';
-        import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer } from 'recharts';
+        import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Legend } from 'recharts';
 
         const InventoryTracker = () => {
           // Simplified data structure
@@ -352,6 +352,14 @@ jobs:
                   >
                     <XAxis type="number" domain={[0, 100]} hide={true} />
                     <YAxis dataKey="batch" type="category" width={80} axisLine={false} tickLine={false} />
+                    <Legend 
+                      wrapperStyle={{ 
+                        paddingTop: '20px',
+                        paddingBottom: '10px'
+                      }}
+                      align="center"
+                      verticalAlign="top"
+                    />
                     <Bar 
                       dataKey="remainingPercentage" 
                       stackId="a" 
