@@ -349,9 +349,9 @@ jobs:
                       }}
                       layout="horizontal"
                       iconType="circle"
-                      iconSize={10} 
+                      iconSize={14} 
                       formatter={(value) => (    // Custom text styling
-                        <span style={{ color: '#666', fontSize: '14px', fontWeight: 'bold' }}>{value}</span>
+                        <span style={{ color: '#666', fontSize: '20px', fontWeight: 'bold' }}>{value}</span>
                       )}
                     />
                     <Bar 
